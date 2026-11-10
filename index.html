@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulator Op-Amp Komparator — Percobaan 5</title>
+<style>
+/* ============ RESET & BASE ============ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #ffffff;
+  --bg-section: #f8fafc;
+  --card: #ffffff;
+  --panel-inner: #f8fafc;
+  --header-fill: #1e3a5f;
+  --border: #cbd5e1;
+  --accent: #0891b2;
+  --accent-2: #0284c7;
+  --text-primary: #0f172a;
+  --text-muted: #64748b;
+  --led-red: #dc2626;
+  --led-bg: #1a0808;
+  --led-bezel: #3f0808;
+  --led-caption: #991b1b;
+  --wire: #334155;
+  --green: #16a34a;
+  --amber: #d97706;
+  --high-green: #16a34a;
+  --low-amber: #d97706;
+  --maxw: 1100px;
+}
+html, body {
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: 'Inter', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.55;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+body { padding: 0 0 60px 0; }
+.container { max-width: var(--maxw); margin: 0 auto; padding: 20px 24px; }
+.mono { font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace; }
+
+/* ============ HEADER ============ */
+.app-header {
+  background: var(--bg-section);
+  border-bottom: 1px solid var(--border);
+  padding: 0;
+  position: sticky; top: 0; z-index: 50;
+  box-shadow: 0 2px 8px rgba(15,23,42,0.08);
+}
+.app-header .inner {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 14px 24px;
+  display: flex; align-items: center; gap: 14px;
+}
+.app-header .accent-bar {
+  width: 4px; height: 44px; background: var(--accent); border-radius: 2px;
+}
+.app-header h1 { font-size: 18px; font-weight: 700; letter-spacing: 0.4px; color: var(--text-primary); }
+.app-header .subtitle { font-size: 11.5px; color: var(--text-muted); margin-top: 2px; }
+.app-header .badge {
+  margin-left: auto;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.5px;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  padding: 4px 10px; border-radius: 12px;
+  background: rgba(8,145,178,0.08);
+}
+
+/* ============ SECTION ============ */
+.section {
+  margin-top: 28px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 24px 28px;
+  box-shadow: 0 1px 4px rgba(15,23,42,0.06);
+}
+.section h2 {
+  font-size: 16px; font-weight: 700; color: var(--accent);
+  margin-bottom: 6px; letter-spacing: 0.3px;
+}
+.section .subtitle { font-size: 12px; color: var(--text-muted); margin-bottom: 18px; }
+.section h3 {
+  font-size: 13.5px; font-weight: 600; color: var(--text-primary);
+  margin-top: 18px; margin-bottom: 8px;
+}
+
+/* ============ CIRCUIT CARD ============ */
+.circuit-card {
+  background: var(--panel-inner);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 18px;
+  margin-bottom: 18px;
+}
+.circuit-card svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 380px;
+}
+
+/* ============ GRID PANELS ============ */
+.panels-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+@media (max-width: 720px) {
+  .panels-grid { grid-template-columns: 1fr; }
+}
+.panel {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px 18px 16px;
+  position: relative;
+}
+.panel h3 {
+  font-size: 13px; font-weight: 700; color: var(--accent);
+  margin: 0 0 2px 0;
+}
+.panel .panel-sub {
+  font-size: 11px; color: var(--text-muted); margin-bottom: 14px;
+}
+.input-row {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 10px;
+}
+.input-row:last-child { margin-bottom: 0; }
+.input-row label.eq {
+  display: inline-block;
+  width: 52px;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 13px; font-weight: 700;
+  color: var(--text-primary);
+}
+.input-row input[type="number"] {
+  flex: 1;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  color: var(--text-primary);
+  background: #ffffff;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.input-row input[type="number"]:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(8,145,178,0.12);
+}
+.input-row .unit {
+  font-size: 11px; color: var(--text-muted);
+  min-width: 38px;
+}
+
+/* ============ PRESETS ============ */
+.presets {
+  display: flex; gap: 10px; flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.preset-btn {
+  padding: 8px 14px;
+  border: 1px solid var(--accent);
+  background: rgba(8,145,178,0.08);
+  color: var(--accent);
+  border-radius: 6px;
+  font-size: 12px; font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.preset-btn:hover {
+  background: var(--accent); color: #ffffff;
+}
+.preset-btn.secondary {
+  border-color: var(--accent-2);
+  color: var(--accent-2);
+  background: rgba(2,132,199,0.08);
+}
+.preset-btn.secondary:hover {
+  background: var(--accent-2); color: #ffffff;
+}
+.preset-btn.danger {
+  border-color: #dc2626;
+  color: #dc2626;
+  background: rgba(220,38,38,0.06);
+}
+.preset-btn.danger:hover {
+  background: #dc2626; color: #ffffff;
+}
+
+/* ============ VOUT DISPLAY (LED style) ============ */
+.vout-display {
+  background: linear-gradient(180deg, #1a0808 0%, #0d0404 100%);
+  border: 2px solid var(--led-bezel);
+  border-radius: 10px;
+  padding: 18px 24px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 18px;
+  box-shadow: inset 0 2px 8px rgba(0,0,0,0.5);
+}
+.vout-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px; font-weight: 700;
+  color: #fca5a5;
+  letter-spacing: 1px;
+}
+.vout-value {
+  font-family: 'JetBrains Mono', 'DSEG7 Classic', monospace;
+  font-size: 38px; font-weight: 700;
+  color: var(--led-red);
+  letter-spacing: 3px;
+  text-shadow: 0 0 12px rgba(220,38,38,0.6), 0 0 24px rgba(220,38,38,0.3);
+  flex: 1;
+  text-align: right;
+}
+.vout-status {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+}
+.vout-status .status-label {
+  font-size: 9px; font-weight: 700;
+  color: #fca5a5;
+  letter-spacing: 1px;
+}
+.vout-status .status-badge {
+  padding: 5px 12px;
+  border-radius: 12px;
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.5px;
+}
+.status-badge.high {
+  background: rgba(22,163,74,0.25);
+  border: 1px solid #22c55e;
+  color: #4ade80;
+  text-shadow: 0 0 8px rgba(34,197,94,0.5);
+}
+.status-badge.low {
+  background: rgba(217,119,6,0.25);
+  border: 1px solid #f59e0b;
+  color: #fbbf24;
+  text-shadow: 0 0 8px rgba(245,158,11,0.5);
+}
+.status-badge.error {
+  background: rgba(220,38,38,0.25);
+  border: 1px solid #ef4444;
+  color: #fca5a5;
+}
+
+/* ============ CALC BREAKDOWN ============ */
+.calc-breakdown {
+  background: var(--panel-inner);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent);
+  border-radius: 6px;
+  padding: 14px 18px;
+  margin-bottom: 16px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12.5px;
+  color: var(--text-primary);
+}
+.calc-breakdown .step {
+  padding: 3px 0;
+  line-height: 1.7;
+}
+.calc-breakdown .step b { color: var(--accent); }
+
+/* ============ NOTE ============ */
+.note {
+  background: rgba(8,145,178,0.06);
+  border: 1px solid rgba(8,145,178,0.2);
+  border-radius: 6px;
+  padding: 12px 16px;
+  font-size: 12px;
+  color: var(--text-primary);
+  line-height: 1.65;
+}
+.note b { color: var(--accent); }
+
+/* ============ TABLE ============ */
+.interactive-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 14px;
+  font-size: 13px;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.interactive-table thead {
+  background: var(--header-fill);
+  color: #ffffff;
+}
+.interactive-table th {
+  padding: 10px 12px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+.interactive-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #e2e8f0;
+  color: var(--text-primary);
+}
+.interactive-table tbody tr {
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.interactive-table tbody tr:hover {
+  background: rgba(8,145,178,0.08);
+}
+.interactive-table tbody tr.active {
+  background: rgba(8,145,178,0.16);
+  border-left: 3px solid var(--accent);
+}
+.interactive-table tbody tr:last-child td { border-bottom: none; }
+.interactive-table .vout-cell {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+}
+.interactive-table .vout-cell.high { color: var(--green); }
+.interactive-table .vout-cell.low { color: var(--amber); }
+
+/* ============ LEGEND ============ */
+.legend-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-top: 14px;
+}
+@media (max-width: 720px) {
+  .legend-grid { grid-template-columns: 1fr; }
+}
+.legend-card {
+  border-radius: 8px;
+  padding: 14px 16px;
+  border: 1px solid;
+}
+.legend-card.high {
+  background: rgba(22,163,74,0.06);
+  border-color: rgba(22,163,74,0.3);
+}
+.legend-card.low {
+  background: rgba(217,119,6,0.06);
+  border-color: rgba(217,119,6,0.3);
+}
+.legend-card .label {
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+.legend-card.high .label { color: var(--green); }
+.legend-card.low .label { color: var(--amber); }
+.legend-card .value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 16px; font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+.legend-card .cond {
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+
+/* ============ FOOTER ============ */
+.app-footer {
+  margin-top: 40px;
+  padding: 18px 24px;
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border);
+  line-height: 1.7;
+}
+
+/* ============ TOAST ============ */
+.toast {
+  position: fixed;
+  bottom: 30px; left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--header-fill);
+  color: #ffffff;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 12.5px; font-weight: 600;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.25s;
+  z-index: 100;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+</style>
+</head>
+<body>
+
+<!-- ============ HEADER ============ -->
+<header class="app-header">
+  <div class="inner">
+    <div class="accent-bar"></div>
+    <div>
+      <h1>SIMULATOR OP-AMP — KOMPARATOR (PEMBANDING)</h1>
+      <div class="subtitle">Modul Praktikum OP-Amp Simulide · Percobaan 5 · Set Vin &amp; Vref — Output HIGH (+15V) atau LOW (0V)</div>
+    </div>
+    <div class="badge">LIVE INTERACTIVE</div>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- ============ SECTION 1: SIMULATOR ============ -->
+  <section class="section" id="simulator">
+    <h2>Simulator Dashboard</h2>
+    <div class="subtitle">Rangkaian Op-Amp sebagai komparator terbalik (inverting comparator). Supply V+ = +15V, V− = Ground (0V) — output biner: HIGH atau LOW.</div>
+
+    <!-- Circuit SVG -->
+    <div class="circuit-card">
+            <?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   id="circuit"
+   viewBox="0 0 544 364"
+   version="1.1"
+   sodipodi:docname="percobaan5.svg"
+   width="544"
+   height="364"
+   inkscape:version="1.4 (e7c3feb100, 2024-10-09)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs41" />
+  <sodipodi:namedview
+     id="namedview41"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="2.0184211"
+     inkscape:cx="272.2425"
+     inkscape:cy="182.07301"
+     inkscape:window-width="1820"
+     inkscape:window-height="1032"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="circuit" />
+  <!-- background -->
+  <rect
+     x="0"
+     y="0"
+     width="544"
+     height="364"
+     fill="#ffffff"
+     id="rect2"
+     sodipodi:insensitive="true" />
+  <!-- title -->
+  <text
+     x="272"
+     y="14"
+     text-anchor="middle"
+     font-family="Inter, sans-serif"
+     font-size="11px"
+     font-weight="700"
+     fill="#0f172a"
+     id="text2">Rangkaian Op-Amp Komparator (Penguat Pembanding)</text>
+  <!-- ===== Vin source (top-left) ===== -->
+  <text
+     x="42"
+     y="64"
+     text-anchor="middle"
+     font-family="Inter, sans-serif"
+     font-size="9px"
+     fill="#64748b"
+     id="vin-label">1V</text>
+  <circle
+     cx="42"
+     cy="92"
+     r="22"
+     fill="#ffffff"
+     stroke="#0891b2"
+     stroke-width="1.6"
+     id="circle2" />
+  <text
+     x="42"
+     y="87"
+     text-anchor="middle"
+     font-family="Inter, sans-serif"
+     font-size="10px"
+     font-weight="700"
+     fill="#0891b2"
+     id="text3">+</text>
+  <text
+     x="42"
+     y="101"
+     text-anchor="middle"
+     font-family="Inter, sans-serif"
+     font-size="9px"
+     font-weight="700"
+     fill="#0f172a"
+     id="text4">Vin</text>
+  <!-- Vin ground (BELOW, facing DOWN) -->
+  <line
+     x1="42"
+     y1="114"
+     x2="42"
+     y2="122"
+     stroke="#334155"
+     stroke-width="1.2"
+     id="line4" />
+  <line
+     x1="34"
+     y1="122"
+     x2="50"
+     y2="122"
+     stroke="#334155"
+     stroke-width="1.4"
+     id="line5" />
+  <line
+     x1="37"
+     y1="126"
+     x2="47"
+     y2="126"
+     stroke="#334155"
+     stroke-width="1.2"
+     id="line6" />
+  <line
+     x1="40"
+     y1="130"
+     x2="44"
+     y2="130"
+     stroke="#334155"
+     stroke-width="1"
+     id="line7" />
+  <!-- ===== Vref source (bottom-left) ===== -->
+  <text
+     x="42"
+     y="204"
+     text-anchor="middle"
+     font-family="Inter, sans-serif"
+     font-size="9px"
+     fill="#64748b"
+     id="vref-label">2V</text>
+  <circle
+     cx="42"
+     cy="232"
+     r="22"
+     fill="#ffffff"
+     stroke="#0891b2"
+     stroke-width="1.6"
+     id="circle7" />
+  <text
+     x="42"
+     y="227"
+     text-anchor="middle"
+     font-family="Inter, sans-serif"
+     font-size="10px"
+     font-weight="700"
+     fill="#0891b2"
+     id="text7">+</text>
+  <text
+     x="42"
+     y="241"
+     text-anchor="middle"
+     font-family="Inter, sans-serif"
+     font-size="8.5px"
+     font-weight="700"
+     fill="#0f172a"
+     id="text8">Vref</text>
+  <!-- Vref ground (BELOW, facing DOWN) -->
+  <line
+     x1="42"
+     y1="254"
+     x2="42"
+     y2="262"
+     stroke="#334155"
+     stroke-width="1.2"
+     id="line8" />
+  <line
+     x1="34"
+     y1="262"
+     x2="50"
+     y2="262"
+     stroke="#334155"
+     stroke-width="1.4"
+     id="line9" />
+  <line
+     x1="37"
+     y1="266"
+     x2="47"
+     y2="266"
+     stroke="#334155"
+     stroke-width="1.2"
+     id="line10" />
+  <line
+     x1="40"
+     y1="270"
+     x2="44"
+     y2="270"
+     stroke="#334155"
+     stroke-width="1"
+     id="line11" />
+  <!-- ===== Vin wire to inverting input (-) ===== -->
+  <!-- (72,100) → (260,100) → (260,155) → (300,155) -->
+  <line
+     x1="64"
+     y1="92"
+     x2="252"
+     y2="92"
+     stroke="#334155"
+     stroke-width="1.4"
+     id="line12" />
+  <line
+     x1="252"
+     y1="92"
+     x2="252"
+     y2="147"
+     stroke="#334155"
+     stroke-width="1.4"
+     id="line13" />
+  <line
+     x1="252"
+     y1="147"
+     x2="292"
+     y2="147"
+     stroke="#334155"
+     stroke-width="1.4"
+     id="line14" />
+  <circle
+     cx="252"
+     cy="147"
+     r="3"
+     fill="#1e3a5f"
+     id="circle14" />
+  <!-- Vin label on wire -->
+  <text
+     x="152"
+     y="84"
+     text-anchor="middle"
+     font-family="Inter, sans-serif"
+     font-size="9px"
+     fill="#64748b"
+     id="text14">ke input membalik (−)</text>
+  <!-- ===== Vref wire to non-inverting input (+) ===== -->
+  <!-- (72,240) → (260,240) → (260,210) → (300,210) -->
+  <line
+     x1="64"
+     y1="232"
+     x2="252"
+     y2="232"
+     stroke="#334155"
+     stroke-width="1.4"
+     id="line15" />
+  <line
+     x1="252"
+     y1="232"
+     x2="252"
+     y2="202"
+     stroke="#334155"
+     stroke-width="1.4"
+     id="line16" />
+  <line
+     x1="252"
+     y1="202"
+     x2="292"
+     y2="202"
+     stroke="#334155"
+     stroke-width="1.4"
+     id="line17" />
+  <circle
+     cx="252"
+     cy="202"
+     r="3"
+     fill="#1e3a5f"
+     id="circle17" />
+  <!-- Vref label on wire -->
+  <text
+     x="152"
+     y="224"
+     text-anchor="middle"
+     font-family="Inter, sans-serif"
+     font-size="9px"
+     fill="#64748b"
+     id="text17">ke input non-membalik (+)</text>
+  <!-- ===== Op-Amp triangle ===== -->
+  <!-- vertices: (300,130), (300,230), (420,180); point at (420,180) -->
+  <polygon
+     points="420,180 300,130 300,230 "
+     fill="#ffffff"
+     stroke="#0891b2"
+     stroke-width="1.8"
+     id="polygon17"
+     transform="translate(-8,-8)" />
+  <!-- inverting input (-) at top-left -->
+  <text
+     x="300"
+     y="152"
+     text-anchor="middle"
+     font-family="Inter, sans-serif"
+     font-size="14px"
+     font-weight="700"
+     fill="#dc2626"
+     id="text18">−</text>
+  <!-- non-inverting input (+) at bottom-left -->
+  <text
+     x="300"
+     y="207"
+     text-anchor="middle"
+     font-family="Inter, sans-serif"
+     font-size="14px"
+     font-weight="700"
+     fill="#0891b2"
+     id="text19">+</text>
+  <!-- OP-AMP label -->
+  <text
+     x="337"
+     y="176"
+     text-anchor="middle"
+     font-family="Inter, sans-serif"
+     font-size="8.5px"
+     font-weight="700"
+     fill="#64748b"
+     id="text20">OP-AMP</text>
+  <text
+     x="337"
+     y="187"
+     text-anchor="middle"
+     font-family="Inter, sans-serif"
+     font-size="7.5px"
+     fill="#94a3b8"
+     id="text21">(741)</text>
+  <!-- ===== V+ supply pin (top of op-amp) ===== -->
+  <!-- V+ pin at (360, 130) → wire UP to (360, 100) → RIGHT to battery + -->
+  <line
+     x1="349.02737"
+     y1="145.78096"
+     x2="349.02737"
+     y2="115.78097"
+     stroke="#0891b2"
+     stroke-width="1.4"
+     id="line21" />
+  <text
+     x="362"
+     y="116"
+     font-family="Inter, sans-serif"
+     font-size="9px"
+     font-weight="700"
+     fill="#0891b2"
+     id="text22">V+</text>
+  <!-- wire from V+ pin to battery + terminal -->
+  <!-- ===== Battery +15V (horizontal, top-right) ===== -->
+  <!-- Battery symbol: 2 cells, plates vertical (perpendicular to horizontal wire) -->
+  <!-- Cell 1: long plate (+) at x=460, short plate at x=465 -->
+  <!-- Cell 2: long plate at x=472, short plate (-) at x=477 -->
+  <!-- Battery + label -->
+  <!-- Battery - label -->
+  <!-- Battery value label -->
+  <text
+     x="343.07693"
+     y="109.59843"
+     text-anchor="middle"
+     font-family="Inter, sans-serif"
+     font-size="10px"
+     font-weight="700"
+     fill="#0891b2"
+     id="text28">+15V</text>
+  <!-- wire from battery - terminal to ground -->
+  <!-- Battery ground (BELOW battery, facing DOWN) -->
+  <!-- ===== V- supply pin (bottom of op-amp) → GROUND ===== -->
+  <line
+     x1="349.52283"
+     y1="198.21904"
+     x2="349.52283"
+     y2="213.21904"
+     stroke="#0f172a"
+     stroke-width="1.4"
+     id="line34" />
+  <text
+     x="359.52283"
+     y="212.21904"
+     font-family="Inter, sans-serif"
+     font-size="9px"
+     font-weight="700"
+     fill="#0f172a"
+     id="text34">V−</text>
+  <!-- V- ground (BELOW op-amp, facing DOWN) -->
+  <line
+     x1="341.52283"
+     y1="213.21904"
+     x2="357.52283"
+     y2="213.21904"
+     stroke="#334155"
+     stroke-width="1.4"
+     id="line35" />
+  <line
+     x1="344.52283"
+     y1="217.21904"
+     x2="354.52283"
+     y2="217.21904"
+     stroke="#334155"
+     stroke-width="1.2"
+     id="line36" />
+  <line
+     x1="347.52283"
+     y1="221.21904"
+     x2="351.52283"
+     y2="221.21904"
+     stroke="#334155"
+     stroke-width="1"
+     id="line37" />
+  <text
+     x="349.52283"
+     y="236.21904"
+     text-anchor="middle"
+     font-family="Inter, sans-serif"
+     font-size="8px"
+     fill="#64748b"
+     id="text37">V− = GND</text>
+  <!-- ===== Output wire to voltmeter ===== -->
+  <line
+     x1="412"
+     y1="172"
+     x2="467"
+     y2="172"
+     stroke="#334155"
+     stroke-width="1.4"
+     id="line38" />
+  <!-- Vout voltmeter -->
+  <rect
+     x="467"
+     y="147"
+     width="34"
+     height="50"
+     fill="#ffffff"
+     stroke="#0891b2"
+     stroke-width="1.6"
+     rx="3"
+     id="rect38" />
+  <text
+     x="484"
+     y="142"
+     text-anchor="middle"
+     font-family="Inter, sans-serif"
+     font-size="7px"
+     fill="#64748b"
+     id="text38">Vout</text>
+  <text
+     x="484"
+     y="170"
+     text-anchor="middle"
+     font-family="Inter, sans-serif"
+     font-size="15px"
+     font-weight="700"
+     fill="#0891b2"
+     id="text39">V</text>
+  <text
+     x="484"
+     y="187"
+     text-anchor="middle"
+     font-family="Inter, sans-serif"
+     font-size="7px"
+     fill="#94a3b8"
+     id="text40">Voltmeter</text>
+  <!-- ===== Status indicator on output wire (HIGH/LOW LED) ===== -->
+  <circle
+     cx="437"
+     cy="172"
+     r="5"
+     fill="#dc2626"
+     id="status-led"
+     stroke="#7f1d1d"
+     stroke-width="0.8">
+    <animate
+       attributeName="opacity"
+       values="1;0.4;1"
+       dur="1.5s"
+       repeatCount="indefinite" />
+  </circle>
+  <!-- ===== Annotation: single supply note ===== -->
+  <text
+     x="272"
+     y="347"
+     text-anchor="middle"
+     font-family="Inter, sans-serif"
+     font-size="9.5px"
+     fill="#64748b"
+     font-style="italic"
+     id="text41">Catatan: Supply tunggal — V+ = +15V (baterai), V− = Ground (0V) → Output hanya bisa HIGH (+15V) atau LOW (0V)</text>
+</svg>
+
+    </div>
+
+    <!-- Preset buttons -->
+    <div class="presets">
+      <button class="preset-btn" data-preset="default">Preset Awal (Vin=1, Vref=2)</button>
+      <button class="preset-btn danger" data-preset="reset">Reset</button>
+    </div>
+
+    <!-- Input panels -->
+    <div class="panels-grid">
+      <!-- LEFT: Vin -->
+      <div class="panel">
+        <h3>Tegangan Input (Vin)</h3>
+        <div class="panel-sub">Sumber tegangan input yang dibandingkan (Volt)</div>
+        <div class="input-row">
+          <label class="eq">Vin</label>
+          <input type="number" id="Vin" value="1" step="0.1" min="-20" max="20">
+          <span class="unit">Volt</span>
+        </div>
+      </div>
+
+      <!-- RIGHT: Vref -->
+      <div class="panel">
+        <h3>Tegangan Referensi (Vref)</h3>
+        <div class="panel-sub">Tegangan pembanding pada input non-membalik (Volt)</div>
+        <div class="input-row">
+          <label class="eq">Vref</label>
+          <input type="number" id="Vref" value="2" step="0.1" min="-20" max="20">
+          <span class="unit">Volt</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Digital Vout Display -->
+    <div class="vout-display">
+      <div class="vout-label">Vout =</div>
+      <div class="vout-value mono" id="vout-display">+15.000</div>
+      <div class="vout-status">
+        <div class="status-label">STATUS</div>
+        <div class="status-badge high" id="status-badge">HIGH</div>
+      </div>
+    </div>
+
+    <!-- Calculation breakdown -->
+    <div class="calc-breakdown" id="calc-breakdown">
+      <div class="step"><b>Prinsip Komparator:</b> Op-Amp open-loop (tanpa feedback) membandingkan Vin (input −) dengan Vref (input +)</div>
+      <div class="step" id="calc-step-1"></div>
+      <div class="step" id="calc-step-2"></div>
+      <div class="step" id="calc-step-3"></div>
+    </div>
+
+    <div class="note">
+      <b>Cara kerja komparator terbalik:</b> Op-Amp bekerja open-loop (penguatan sangat besar). Karena V− supply dihubungkan ke Ground (0V), output hanya bisa bernilai <b>+15V</b> (mendekati V+) atau <b>0V</b> (mendekati V− = ground). Tidak ada nilai tegangan output di antaranya.
+    </div>
+  </section>
+
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="app-footer">
+    Simulator Op-Amp Komparator · Modul Praktikum OP-Amp Simulide · Percobaan 5<br>
+    Single-file HTML simulator · Buka di browser modern (Chrome, Firefox, Edge, Safari)
+  </footer>
+</div>
+
+<!-- Toast notification -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ============ CONFIG: Table rows for Percobaan 5.1 ============
+const TABLE_51_ROWS = [
+  { no: 1, vref: 2, vin: 1 },
+  { no: 2, vref: 2, vin: 2 },
+  { no: 3, vref: 2, vin: 3 },
+  { no: 4, vref: 2, vin: 4 },
+  { no: 5, vref: 3, vin: 1 },
+  { no: 6, vref: 3, vin: 2 },
+  { no: 7, vref: 3, vin: 3 },
+  { no: 8, vref: 3, vin: 4 },
+];
+
+const VHIGH = 15;  // +15V when HIGH
+const VLOW  = 0;   // 0V when LOW
+
+// ============ HELPERS ============
+function fmt3(value) {
+  if (!isFinite(value)) return '---.---';
+  var sign = value < 0 ? '-' : (value > 0 ? '+' : ' ');
+  var abs = Math.abs(value);
+  var intPart = Math.floor(abs);
+  var fracPart = Math.round((abs - intPart) * 1000);
+  if (fracPart >= 1000) { intPart += 1; fracPart -= 1000; }
+  var fracStr = String(fracPart);
+  while (fracStr.length < 3) { fracStr = '0' + fracStr; }
+  return sign + intPart + '.' + fracStr;
+}
+
+function parseNum(id) {
+  var el = document.getElementById(id);
+  if (!el) return NaN;
+  var raw = el.value;
+  if (typeof raw === 'string') {
+    raw = raw.replace(',', '.').trim();
+  }
+  var n = parseFloat(raw);
+  return isNaN(n) ? NaN : n;
+}
+
+function setFieldValue(id, value) {
+  var el = document.getElementById(id);
+  if (el) el.value = value;
+}
+
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(function() { t.classList.remove('show'); }, 1800);
+}
+
+// ============ COMPARATOR LOGIC ============
+function computeVout(vin, vref) {
+  // Inverting comparator: Vin at (-), Vref at (+)
+  // Supply: V+ = +15V, V- = GND (0V)
+  // Output HIGH (+15V) when V+ > V- (i.e., Vref > Vin)
+  // Output LOW (0V) when V+ <= V- (i.e., Vref <= Vin)
+  if (isNaN(vin) || isNaN(vref)) {
+    return { vout: NaN, isHigh: null, valid: false };
+  }
+  var isHigh = vref > vin;  // strict inequality: equal inputs → LOW
+  var vout = isHigh ? VHIGH : VLOW;
+  return { vout: vout, isHigh: isHigh, valid: true };
+}
+
+// ============ MAIN RECALC ============
+function recalc() {
+  var vin = parseNum('Vin');
+  var vref = parseNum('Vref');
+  var voutDisplay = document.getElementById('vout-display');
+  var statusBadge = document.getElementById('status-badge');
+  var statusLed = document.getElementById('status-led');
+  var step1 = document.getElementById('calc-step-1');
+  var step2 = document.getElementById('calc-step-2');
+  var step3 = document.getElementById('calc-step-3');
+
+  // update SVG labels for Vin/Vref source values
+  var vinLabel = document.getElementById('vin-label');
+  var vrefLabel = document.getElementById('vref-label');
+  if (vinLabel) vinLabel.textContent = isFinite(vin) ? vin + 'V' : '—';
+  if (vrefLabel) vrefLabel.textContent = isFinite(vref) ? vref + 'V' : '—';
+
+  // Handle invalid input
+  if (isNaN(vin) || isNaN(vref)) {
+    voutDisplay.textContent = '---.---';
+    statusBadge.textContent = 'INPUT ERR';
+    statusBadge.className = 'status-badge error';
+    if (statusLed) statusLed.setAttribute('fill', '#6b7280');
+    step1.innerHTML = '<b>Error:</b> Nilai Vin atau Vref tidak valid. Mohon isi angka yang benar.';
+    step2.innerHTML = '';
+    step3.innerHTML = '';
+    return;
+  }
+
+  // Compute
+  var result = computeVout(vin, vref);
+  var vout = result.vout;
+  var isHigh = result.isHigh;
+
+  // Update Vout display
+  voutDisplay.textContent = fmt3(vout);
+
+  // Update status badge + LED
+  if (isHigh) {
+    statusBadge.textContent = 'HIGH (+15V)';
+    statusBadge.className = 'status-badge high';
+    if (statusLed) statusLed.setAttribute('fill', '#22c55e');
+  } else {
+    statusBadge.textContent = 'LOW (0V)';
+    statusBadge.className = 'status-badge low';
+    if (statusLed) statusLed.setAttribute('fill', '#f59e0b');
+  }
+
+  // Update calc breakdown
+  step1.innerHTML = '<b>Input:</b> Vin = ' + vin + ' V (pada input −),  Vref = ' + vref + ' V (pada input +)';
+  var condTxt;
+  if (vin < vref) {
+    condTxt = 'Vin &lt; Vref  →  input (+) lebih besar dari input (−)';
+  } else if (vin > vref) {
+    condTxt = 'Vin &gt; Vref  →  input (−) lebih besar dari input (+)';
+  } else {
+    condTxt = 'Vin = Vref  →  kedua input sama (titik ambang)';
+  }
+  step2.innerHTML = '<b>Perbandingan:</b> ' + condTxt;
+  var resultTxt;
+  if (isHigh) {
+    resultTxt = 'Vout menuju saturasi POSITIF (+15V) — Output HIGH';
+  } else if (vin === vref) {
+    resultTxt = 'Vout menuju saturasi NEGATIF (0V, karena V− = GND) — Output LOW (titik ambang)';
+  } else {
+    resultTxt = 'Vout menuju saturasi NEGATIF (0V, karena V− = GND) — Output LOW';
+  }
+  step3.innerHTML = '<b>Hasil:</b> ' + resultTxt;
+}
+
+// ============ TABLE RENDER ============
+function renderTable() {
+  var tbody = document.querySelector('#table-5-1 tbody');
+  if (!tbody) return;
+  var html = '';
+  TABLE_51_ROWS.forEach(function(row) {
+    var result = computeVout(row.vin, row.vref);
+    var voutTxt = fmt3(result.vout);
+    var condTxt;
+    var condClass;
+    if (row.vin < row.vref) {
+      condTxt = 'Vin &lt; Vref → HIGH';
+      condClass = 'high';
+    } else if (row.vin > row.vref) {
+      condTxt = 'Vin &gt; Vref → LOW';
+      condClass = 'low';
+    } else {
+      condTxt = 'Vin = Vref → LOW (ambang)';
+      condClass = 'low';
+    }
+    html += '<tr data-vin="' + row.vin + '" data-vref="' + row.vref + '">' +
+            '<td>' + row.no + '.</td>' +
+            '<td>' + row.vref + ' V</td>' +
+            '<td>' + row.vin + ' V</td>' +
+            '<td class="vout-cell ' + condClass + '">' + voutTxt + ' V</td>' +
+            '<td class="' + condClass + '">' + condTxt + '</td>' +
+            '</tr>';
+  });
+  tbody.innerHTML = html;
+
+  // Bind click events
+  var rows = tbody.querySelectorAll('tr');
+  rows.forEach(function(tr) {
+    tr.addEventListener('click', function() {
+      var vin = parseFloat(tr.getAttribute('data-vin'));
+      var vref = parseFloat(tr.getAttribute('data-vref'));
+      setFieldValue('Vin', vin);
+      setFieldValue('Vref', vref);
+      // highlight active row
+      rows.forEach(function(r) { r.classList.remove('active'); });
+      tr.classList.add('active');
+      recalc();
+      showToast('Vin=' + vin + 'V, Vref=' + vref + 'V dimuat');
+    });
+  });
+}
+
+// ============ PRESETS ============
+function applyPreset(name) {
+  if (name === 'default' || name === 'reset') {
+    setFieldValue('Vin', 1);
+    setFieldValue('Vref', 2);
+    // clear active table row
+    var rows = document.querySelectorAll('#table-5-1 tbody tr');
+    rows.forEach(function(r) { r.classList.remove('active'); });
+    recalc();
+    showToast(name === 'reset' ? 'Simulator direset ke nilai awal' : 'Preset awal dimuat');
+  }
+}
+
+// ============ INIT ============
+function init() {
+  // Input change listeners
+  ['Vin', 'Vref'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('input', recalc);
+      el.addEventListener('change', recalc);
+    }
+  });
+
+  // Preset buttons
+  var presetBtns = document.querySelectorAll('.preset-btn');
+  presetBtns.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      applyPreset(btn.getAttribute('data-preset'));
+    });
+  });
+
+  // Render table
+  renderTable();
+
+  // Initial calculation
+  recalc();
+}
+
+// Run on DOM ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
+</script>
+
+</body>
+</html>
